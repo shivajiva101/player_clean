@@ -8,7 +8,6 @@ It adds a single command /clean <player> for use afer a player joins'
 by shivajiva101@hotmail.com
 ]]--
 
-local mod_data = minetest.get_mod_storage()
 local ticket_queue = {}
 local tickets = false
 local type = {main="main",craft="craft"}
