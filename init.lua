@@ -36,7 +36,7 @@ end
 pc.load_data()
 
 if not whitelist[owner] then
-	whitelist[owner]
+	whitelist[owner] = true
 	pc.save_data()
 end
 
@@ -126,7 +126,7 @@ pc.do_queue = function()
   minetest.after(0.5, pc.do_queue)
 end
 
-pc.add_ticket(player)
+pc.add_ticket = function(player)
   table.insert(ticket_queue, player)
   if tickets == false then
     tickets = true
