@@ -4,9 +4,13 @@ when they join and reset their privileges.
 It can be overriden in minetest.conf using:
 pclean.on_join = false
 pclean.reset_privs = false
-It adds a single command /clean <player> for use afer a player joins'
+It adds a two commands /clean <player> for use afer a player joins'
+and /pcwl [{add|remove} <player>]
+
 by shivajiva101@hotmail.com
+
 ]]--
+
 local pc = {}
 local ticket_queue = {}
 local tickets = false
