@@ -35,7 +35,10 @@ pc.load_data = function()
 end
 pc.load_data()
 
-if not whitelist[owner] then whitelist[owner] end
+if not whitelist[owner] then
+	whitelist[owner]
+	pc.save_data()
+end
 
 pc.bad_item = function(item_string)
 	for i=1,#bad_strings do
