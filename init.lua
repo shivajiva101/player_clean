@@ -126,7 +126,7 @@ end
 
 if join == "true" then
     minetest.register_on_joinplayer(function(player)
-            	local name = player:get_player_name()
+        local name = player:get_player_name()
 	-- exclude owner/ whitelisted player
 	if minetest.setting_get("name") == name
 	or whitelist[name] then
