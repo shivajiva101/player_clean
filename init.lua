@@ -10,7 +10,7 @@ by shivajiva101@hotmail.com
 local pc = {}
 local ticket_queue = {}
 local tickets = false
-local type = {main="main",craft="craft"}
+local itype = {main="main",craft="craft"}
 local whitelist = {}
 local bad_strings = {"admin","maptools:"} -- items containing these strings will be removed
 local join = minetest.setting_get("pclean.on_join") or "true"
@@ -19,8 +19,7 @@ local priv_set = {interact=true, shout=true } -- privs player is left with after
 local ms = minetest.get_mod_storage() -- get a reference to the mod storage
 
 pc.save_data = function()
-	local x = minetest.serialize(whitelist)
-    	ms:set_string("wl", x)
+    	ms:set_string("wl", minetest.serialize(whitelist))
 end
 
 pc.load_data = function()
@@ -62,7 +61,7 @@ local function do_queue()
 
     -- do normal inventories
     minetest.log("action", "checking attached inventories...")
-    for key,str in pairs(type) do
+    for key,str in pairs(itype) do
         if not player_inv:is_empty(str) then
             for i,v in ipairs(player_inv_lists[key]) do
               if bad_item(v:get_name()) then
@@ -128,10 +127,11 @@ end
 if join == "true" then
     minetest.register_on_joinplayer(function(player)
             	local name = player:get_player_name()
-		-- exclude owner
-		if minetest.setting_get("name") == name then return end
-            	-- check whitelist
-		if whitelist[name] then return end
+	-- exclude owner/ whitelisted player
+	if minetest.setting_get("name") == name
+	or whitelist[name] then
+		return
+	end
             	add_ticket(player)
     end)
 end
@@ -177,10 +177,11 @@ minetest.register_chatcommand("clean", {
           return false, "Invalid usage, /clean <player>"
         end
         local player = minetest.get_player_by_name(param)
-	-- exclude owner
-	if minetest.setting_get("name") == player then return end
-	-- exclude whitelist members
-        if whitelist[player] then return end
+	-- exclude owner/ whitelisted player
+	if minetest.setting_get("name") == name
+	or whitelist[name] then
+		return
+	end
         add_ticket(player)
     end
 })
