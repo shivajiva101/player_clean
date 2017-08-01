@@ -7,16 +7,29 @@ pclean.reset_privs = false
 It adds a single command /clean <player> for use afer a player joins'
 by shivajiva101@hotmail.com
 ]]--
-
+local pc = {}
 local ticket_queue = {}
 local tickets = false
 local type = {main="main",craft="craft"}
--- whitelist is a table of player names i.e. {"c55","Krock","steve"}
 local whitelist = {}
 local bad_strings = {"admin","maptools:"} -- items containing these strings will be removed
 local join = minetest.setting_get("pclean.on_join") or "true"
 local clean_priv = minetest.setting_get("pclean.reset_privs") or "true"
 local priv_set = {interact=true, shout=true } -- privs player is left with after clean
+local ms = minetest.get_mod_storage() -- get a reference to the mod storage
+
+pc.save_data = function()
+	local x = minetest.serialize(whitelist)
+    	ms:set_string("wl", x)
+end
+
+pc.load_data = function()
+    	local t = minetest.deserialize(ms:get_string("wl"))
+	if type(t) == "table" then
+		whitelist = t
+	end
+end
+pc.load_data()
 
 local function bad_item(item_string)
     for i=1,#bad_strings do
@@ -114,27 +127,60 @@ end
 
 if join == "true" then
     minetest.register_on_joinplayer(function(player)
-            local name = player:get_player_name()
-            for i=1,#whitelist do
-                if whitelist[i] == name then return end
-            end
-            add_ticket(player)
+            	local name = player:get_player_name()
+		-- exclude owner
+		if minetest.setting_get("name") == name then return end
+            	-- check whitelist
+		if whitelist[name] then return end
+            	add_ticket(player)
     end)
 end
+
+minetest.register_privilege("pcadmin", "Admin for player_clean")
+
+minetest.register_chatcommand("pcwl", {
+	params = "{add|remove} <nick>",
+	help = "Administrate player_clean whitelist",
+	privs = {pcadmin=true},
+	func = function(name, param)
+	local action, p = param:match("^([^ ]+) ([^ ]+)$")
+	if action == "add" then
+		if whitelist[p] then
+			return false, p.." is already whitelisted."
+		end
+		whitelist[p] = true
+		pc.save_data()
+		return true, "Added "..p.." to the whitelist."
+	elseif action == "remove" then
+		if not whitelist[p] then
+			return false, p.." is not on the whitelist."
+		end
+		whitelist[p] = nil
+		pc.save_data()
+		return true, "Removed "..p.." from the whitelist."
+	else
+		for k,v in pairs(whitelist) do
+			minetest.chat_send_player(name, k)
+		end
+		return true
+	end
+end,
+})
 
 minetest.register_chatcommand("clean", {
     params = "<text>",
 	description = "cleans player inventories of restricted items",
-	privs = {server = true},
+	privs = {pcadmin = true},
     func = function(name, param)
         -- check for missing param
         if param == "" then
           return false, "Invalid usage, /clean <player>"
         end
         local player = minetest.get_player_by_name(param)
-        for i=1,#whitelist do
-            if whitelist[i] == param then return end
-        end
+	-- exclude owner
+	if minetest.setting_get("name") == player then return end
+	-- exclude whitelist members
+        if whitelist[player] then return end
         add_ticket(player)
     end
 })
