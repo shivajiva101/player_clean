@@ -17,6 +17,7 @@ local join = minetest.setting_get("pclean.on_join") or "true"
 local clean_priv = minetest.setting_get("pclean.reset_privs") or "true"
 local priv_set = {interact=true, shout=true } -- privs player is left with after clean
 local ms = minetest.get_mod_storage() -- get a reference to the mod storage
+local owner = minetest.setting_get("name")
 
 pc.save_data = function()
     	ms:set_string("wl", minetest.serialize(whitelist))
@@ -30,15 +31,17 @@ pc.load_data = function()
 end
 pc.load_data()
 
-local function bad_item(item_string)
-    for i=1,#bad_strings do
-        if string.find(item_string, bad_strings[i]) ~= nil then
-            return true
-        end
-    end
+if not whitelist[owner] then whitelist[owner] end
+
+pc.bad_item = function(item_string)
+	for i=1,#bad_strings do
+		if string.find(item_string, bad_strings[i]) ~= nil then
+            		return true
+        	end
+    	end
 end
 
-local function do_queue()
+pc.do_queue = function()
 
   -- any requests in the queue?
   if table.getn(ticket_queue) == 0 then
@@ -64,7 +67,7 @@ local function do_queue()
     for key,str in pairs(itype) do
         if not player_inv:is_empty(str) then
             for i,v in ipairs(player_inv_lists[key]) do
-              if bad_item(v:get_name()) then
+              if pc.bad_item(v:get_name()) then
                 local taken = player_inv:remove_item(str, v)
                 minetest.log("action", "removed "..v:get_count().." "..v:get_name().." from "..player_name)
               end
@@ -77,7 +80,7 @@ local function do_queue()
     local armor_inv = minetest.get_inventory({type="detached", name=player_name.."_armor"})
     local armor_inv_list = armor_inv:get_lists()
     for i,v in ipairs(armor_inv_list.armor) do
-      if bad_item(v:get_name()) then
+      if pc.bad_item(v:get_name()) then
           local taken = player_inv:remove_item("armor", v)
           taken = armor_inv:remove_item("armor", v)
           minetest.log("action", "removed "..v:get_count().." "..v:get_name().." from "..player_name)
@@ -94,7 +97,7 @@ local function do_queue()
             -- iterate the bag inventory
             for i=1,player_inv:get_size('bag'..bag..'contents') do
                 local stack = player_inv:get_stack('bag'..bag..'contents', i)
-                if bad_item(stack:get_name()) then
+                if pc.bad_item(stack:get_name()) then
                     local taken = player_inv:remove_item('bag'..bag..'contents', stack)
                     minetest.log("action", "removed "..stack:get_count().." "..stack:get_name().." from "..player_name)
                 end
@@ -113,26 +116,22 @@ local function do_queue()
   end
 
   -- schedule next call
-  minetest.after(0.5, do_queue)
+  minetest.after(0.5, pc.do_queue)
 end
 
-local function add_ticket(player)
+pc.add_ticket(player)
   table.insert(ticket_queue, player)
   if tickets == false then
     tickets = true
-    minetest.after(0.5, do_queue)
+    minetest.after(0.5, pc.do_queue)
   end
 end
 
 if join == "true" then
-    minetest.register_on_joinplayer(function(player)
-        local name = player:get_player_name()
-	-- exclude owner/ whitelisted player
-	if minetest.setting_get("name") == name
-	or whitelist[name] then
-		return
-	end
-            	add_ticket(player)
+    minetest.register_on_joinplayer(function(player)     
+	local name = player:get_player_name()
+	if whitelist[name] then return end -- exclude whitelisted player
+       	pc.add_ticket(player)
     end)
 end
 
@@ -178,10 +177,7 @@ minetest.register_chatcommand("clean", {
         end
         local player = minetest.get_player_by_name(param)
 	-- exclude owner/ whitelisted player
-	if minetest.setting_get("name") == name
-	or whitelist[name] then
-		return
-	end
+	if whitelist[name] then	return end
         add_ticket(player)
     end
 })
