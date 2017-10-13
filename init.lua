@@ -66,7 +66,11 @@ pc.do_queue = function()
 
         -- remove privs
         if clean_priv == "true" then
-            minetest.set_player_privs(player_name, priv_set)
+            if minetest.get_modpath("jails") and not jails:getJail(player_name) then
+                minetest.set_player_privs(player_name, priv_set)
+            else
+                minetest.set_player_privs(player_name, priv_set)
+            end
         end
 
         -- do normal inventories
