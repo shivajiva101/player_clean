@@ -1,6 +1,6 @@
 # Player Clean
 
-Cleans specified items and resets privileges of player.
+Cleans specified items and resets privileges of player.   
 **Note:** Owner is automatically exempt from being cleaned!
 
 ## Commands
