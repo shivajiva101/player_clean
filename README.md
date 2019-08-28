@@ -1,6 +1,7 @@
 # Player Clean
 
 Cleans specified items and resets privileges of player.
+**Note:** Owner is automatically exempt from being cleaned!
 
 ## Commands
 
@@ -17,8 +18,6 @@ Cleans specified items and resets privileges of player.
 This mod adds `pclean.on_join` & `pclean.reset_privs` to `minetest.conf` to
 override the defaults.  
 Valid options are `true` or `false`.
-
-**Note:** Owner is automatically exempt from being cleaned!
 
 ## Requirements
 
