@@ -1,6 +1,6 @@
 # Player Clean
 
-Cleans players of specified items and resets privileges.
+Cleans specified items and resets privileges of player.
 
 ## Commands
 
@@ -19,3 +19,8 @@ override the defaults.
 Valid options are true or false.
 
 **Note:** Owner is automatically exempt from being cleaned!
+
+## Requirements
+
+- default (included in [minetest_game](https://github.com/minetest/minetest_game))
+- MT/MTG 5.0.0+.
