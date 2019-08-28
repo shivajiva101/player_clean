@@ -143,15 +143,15 @@ if join == "true" then
 end
 
 minetest.register_privilege("pcadmin", {
-    description = "Admin for player_clean",
+    description = "Allows the use of '/pcwl' and '/clean'.",
     give_to_singleplayer = false,
     give_to_admin = true,
 })
 
 minetest.register_chatcommand("pcwl", {
-    params = "(add | remove) <nick>",
-    help = "Administrate player_clean whitelist",
-    privs = {pcadmin = true},
+    params = "(add | remove) <player>",
+    description = "Add players to black/whitelist.",
+    privs = { pcadmin = true },
     func = function(name, param)
         local action, p = param:match("^([^ ]+) ([^ ]+)$")
         if action == "add" then
@@ -178,17 +178,17 @@ minetest.register_chatcommand("pcwl", {
 })
 
 minetest.register_chatcommand("clean", {
-    params = "<text>",
+    params = "<player>",
     description = "Cleans restricted items in player inventory.",
-    privs = {pcadmin = true},
+    privs = { pcadmin = true },
     func = function(name, param)
-        -- check for missing param
+        -- Check for missing param
         if param == "" then
-            return false, "Invalid usage, /clean <player>"
+            return false, "Invalid usage, see /help clean"
         end
         local player = minetest.get_player_by_name(param)
-        -- exclude whitelisted player
+        -- Exclude whitelisted player
         if whitelist[name] then return end
-        add_ticket(player)
-    end
+            add_ticket(player)
+        end
 })
