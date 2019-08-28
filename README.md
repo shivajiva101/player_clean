@@ -1,15 +1,21 @@
-# player_clean
-Minetest mod - cleans players of specified items and resets privileges.
+# Player Clean
 
-Adds the commands:
+Cleans players of specified items and resets privileges.
 
-/clear <player_name> -- for use after a player joins.
+## Commands
 
-/pcwl {add|remove} <player_name> -- add/remove player to/from the whitelist, use /pcwl to see the list
+* `/clear <player_name>` -- for use after a player joins.
 
-Adds the privilege: pcadmin -- allows use of /clean and /pcwl commands
+* `/pcwl (<add | remove>) <player_name>` add/remove player to/from the whitelist, use /pcwl to see the list
 
-Add pclean.on_join & pclean.reset_privs to minetest.conf to
-override the defaults, valid options are true or false.
+## Privileges
 
-Note: Owner is automatically exempt from being cleaned!
+* `pcadmin` allows use of `/clean` and `/pcwl` commands.
+
+## Functions
+
+This mod adds `pclean.on_join` & `pclean.reset_privs` to `minetest.conf` to
+override the defaults.  
+Valid options are true or false.
+
+**Note:** Owner is automatically exempt from being cleaned!
