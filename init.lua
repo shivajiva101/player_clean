@@ -1,14 +1,14 @@
 --[[
 This code is designed to clear admin items from a player
 when they join and reset their privileges.
+
 It can be overriden in minetest.conf using:
+
 pclean.on_join = false
 pclean.reset_privs = false
-It adds a two commands /clean <player> for use afer a player joins'
-and /pcwl [{add|remove} <player>]
 
-by shivajiva101@hotmail.com
-
+See "README.md" file for more information about the mod.
+Created by shivajiva101@hotmail.com
 ]]--
 
 local pc = {}
@@ -17,11 +17,11 @@ local tickets = false
 local itype = {main = "main", craft = "craft"}
 local whitelist = {}
 local bad_strings = {"admin", "maptools:"} -- items containing these strings will be removed
-local join = minetest.setting_get("pclean.on_join") or "true"
-local clean_priv = minetest.setting_get("pclean.reset_privs") or "true"
-local priv_set = {interact = true, shout = true } -- privs player is left with after clean
+local join = minetest.settings:get("pclean.on_join") or "true"
+local clean_priv = minetest.settings:get("pclean.reset_privs") or "true"
+local priv_set = {interact = true, shout = true} -- privs player is left with after clean
 local ms = minetest.get_mod_storage() -- get a reference to the mod storage
-local owner = minetest.setting_get("name")
+local owner = minetest.settings:get("name")
 
 pc.save_data = function()
     ms:set_string("wl", minetest.serialize(whitelist))
@@ -70,43 +70,43 @@ pc.do_queue = function()
         end
 
         -- do normal inventories
-        minetest.log("action", "checking attached inventories...")
+        minetest.log("action", "Checking attached inventories...")
         for key, str in pairs(itype) do
             if not player_inv:is_empty(str) then
                 for i, v in ipairs(player_inv_lists[key]) do
                     if pc.bad_item(v:get_name()) then
                         local taken = player_inv:remove_item(str, v)
-                        minetest.log("action", "removed "..v:get_count().." "..v:get_name().." from "..player_name)
+                        minetest.log("action", "Removed "..v:get_count().." "..v:get_name().." from "..player_name)
                     end
                 end
             end
         end
 
         -- detached armor
-        minetest.log("action", "checking armor inventory...")
-        local armor_inv = minetest.get_inventory({type = "detached", name = player_name.."_armor"})
+        minetest.log("action", "Checking armor inventory...")
+        local armor_inv = minetest.get_inventory({type = "detached", name = player_name .. "_armor"})
         local armor_inv_list = armor_inv:get_lists()
         for i, v in ipairs(armor_inv_list.armor) do
             if pc.bad_item(v:get_name()) then
                 local taken = player_inv:remove_item("armor", v)
                 taken = armor_inv:remove_item("armor", v)
-                minetest.log("action", "removed "..v:get_count().." "..v:get_name().." from "..player_name)
+                minetest.log("action", "Removed " .. v:get_count() .. " " .. v:get_name() .. " from " .. player_name)
                 armor:set_player_armor(player) --refresh
             end
         end
 
 
         -- do bags
-        minetest.log("action", "checking bag inventories...")
+        minetest.log("action", "Checking bag inventories...")
         for bag = 1, 4 do
             -- is the slot filled?
-            if not player_inv:is_empty('bag'..bag) then
+            if not player_inv:is_empty("bag" .. bag) then
                 -- iterate the bag inventory
-                for i = 1, player_inv:get_size('bag'..bag..'contents') do
-                    local stack = player_inv:get_stack('bag'..bag..'contents', i)
+                for i = 1, player_inv:get_size("bag" .. bag .. "contents") do
+                    local stack = player_inv:get_stack("bag" .. bag .. "contents", i)
                     if pc.bad_item(stack:get_name()) then
-                        local taken = player_inv:remove_item('bag'..bag..'contents', stack)
-                        minetest.log("action", "removed "..stack:get_count().." "..stack:get_name().." from "..player_name)
+                        local taken = player_inv:remove_item("bag" .. bag .. "contents", stack)
+                        minetest.log("action", "Removed " .. stack:get_count() .. " " .. stack:get_name() .. " from " .. player_name)
                     end
                 end
             end
@@ -142,28 +142,32 @@ if join == "true" then
     end)
 end
 
-minetest.register_privilege("pcadmin", "Admin for player_clean")
+minetest.register_privilege("pcadmin", {
+    description = "Allows the use of '/pcwl' and '/clean'.",
+    give_to_singleplayer = false,
+    give_to_admin = true,
+})
 
 minetest.register_chatcommand("pcwl", {
-    params = "{add|remove} <nick>",
-    help = "Administrate player_clean whitelist",
-    privs = {pcadmin = true},
+    params = "(add | remove) <player>",
+    description = "Add players to black/whitelist.",
+    privs = { pcadmin = true },
     func = function(name, param)
         local action, p = param:match("^([^ ]+) ([^ ]+)$")
         if action == "add" then
             if whitelist[p] then
-                return false, p.." is already whitelisted."
+                return false, p .. " is already whitelisted."
             end
             whitelist[p] = true
             pc.save_data()
-            return true, "Added "..p.." to the whitelist."
+            return true, "Added " .. p .. " to the whitelist."
         elseif action == "remove" then
             if not whitelist[p] then
-                return false, p.." is not on the whitelist."
+                return false, p .. " is not on the whitelist."
             end
             whitelist[p] = nil
             pc.save_data()
-            return true, "Removed "..p.." from the whitelist."
+            return true, "Removed " .. p .. " from the whitelist."
         else
             for k, v in pairs(whitelist) do
                 minetest.chat_send_player(name, k)
@@ -174,17 +178,17 @@ minetest.register_chatcommand("pcwl", {
 })
 
 minetest.register_chatcommand("clean", {
-    params = "<text>",
-    description = "cleans player inventories of restricted items",
-    privs = {pcadmin = true},
+    params = "<player>",
+    description = "Cleans restricted items in player inventory.",
+    privs = { pcadmin = true },
     func = function(name, param)
-        -- check for missing param
+        -- Check for missing param
         if param == "" then
-            return false, "Invalid usage, /clean <player>"
+            return false, "Invalid usage, see /help clean"
         end
         local player = minetest.get_player_by_name(param)
-        -- exclude whitelisted player
+        -- Exclude whitelisted player
         if whitelist[name] then return end
-        add_ticket(player)
-    end
+            add_ticket(player)
+        end
 })
